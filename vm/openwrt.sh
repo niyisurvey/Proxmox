@@ -417,8 +417,9 @@ while read -r line; do
   fi
   STORAGE_MENU+=("$TAG" "$ITEM" "OFF")
 done < <(pvesm status -content images | awk 'NR>1')
+
 VALID=$(pvesm status -content images | awk 'NR>1')
-if [ -z "$VALID"]; then
+if [ -z "$VALID" ]; then
   echo -e "\n${RD}⚠ Unable to detect a valid storage location.${CL}"
   echo -e "Exiting..."
   exit
@@ -432,6 +433,7 @@ else
       "${STORAGE_MENU[@]}" 3>&1 1>&2 2>&3) || exit
   done
 fi
+
 msg_ok "Using ${CL}${BL}$STORAGE${CL} ${GN}for Storage Location."
 msg_ok "Virtual Machine ID is ${CL}${BL}$VMID${CL}."
 msg_info "Getting URL for OpenWrt Disk Image"
