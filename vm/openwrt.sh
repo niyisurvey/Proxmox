@@ -17,11 +17,17 @@ function header_info {
 \____/ .___/\___/_/ /_/|__/|__/_/   \__/
     /_/ W I R E L E S S   F R E E D O M
 
+VLAN 100 (SONIC): Domain sonic.lan 192.168.0.1
+VLAN 20 (IoT): Domain iot.lan 192.168.20.1
+VLAN 50 (TAILS): Domain tails.lan 192.168.50.1
+VLAN 1 (MGMT): Domain robo.lan 192.168.1.1
+VLAN 30 (LAB): Domain lab.lan 192.168.30.1
+
 EOF
 }
 header_info
 echo -e "Loading..."
-GEN_MAC=02:$(openssl rand -hex 5 | awk '{print toupper($0)}' | sed 's/\(..\)/\1:/g; s/.$//')
+GEN_MAC=ac:87:a3:00:5f:6d
 GEN_MAC_LAN=02:$(openssl rand -hex 5 | awk '{print toupper($0)}' | sed 's/\(..\)/\1:/g; s/.$//')
 NEXTID=$(pvesh get /cluster/nextid)
 YW=$(echo "\033[33m")
@@ -113,7 +119,7 @@ function send_line_to_vm() {
     "U") character="shift-u" ;;
     "V") character="shift-v" ;;
     "W") character="shift-w" ;;
-    "X") character="shift=x" ;;
+    "X") character="shift-x" ;;
     "Y") character="shift-y" ;;
     "Z") character="shift-z" ;;
     "!") character="shift-1" ;;
@@ -203,10 +209,9 @@ function default_settings() {
   VLAN=""
   MAC=$GEN_MAC
   LAN_MAC=$GEN_MAC_LAN
-  LAN_BRG="vmbr0"
+  LAN_BRG="vmbr1"
   LAN_IP_ADDR="192.168.1.1"
   LAN_NETMASK="255.255.255.0"
-  LAN_VLAN=",tag=999"
   MTU=""
   START_VM="yes"
   echo -e "${DGN}Using Virtual Machine ID: ${BGN}${VMID}${CL}"
@@ -214,11 +219,11 @@ function default_settings() {
   echo -e "${DGN}Allocated Cores: ${BGN}${CORE_COUNT}${CL}"
   echo -e "${DGN}Allocated RAM: ${BGN}${RAM_SIZE}${CL}"
   echo -e "${DGN}Using WAN Bridge: ${BGN}${BRG}${CL}"
-  echo -e "${DGN}Using WAN VLAN: ${BGN}Default${CL}"
+  echo -e "${DGN}Using WAN VLAN: ${BGN}None${CL}"
   echo -e "${DGN}Using WAN MAC Address: ${BGN}${MAC}${CL}"
   echo -e "${DGN}Using LAN MAC Address: ${BGN}${LAN_MAC}${CL}"
-  echo -e "${DGN}Using LAN Bridge: ${BGN}${LAN_BRG}${CL}"
-  echo -e "${DGN}Using LAN VLAN: ${BGN}999${CL}"
+  echo -e "${DGN}Using LAN Bridge: ${BGN}$LAN_BRG${CL}"
+  echo -e "${DGN}Using LAN VLAN: ${BGN}Multiple${CL}"
   echo -e "${DGN}Using LAN IP Address: ${BGN}${LAN_IP_ADDR}${CL}"
   echo -e "${DGN}Using LAN NETMASK: ${BGN}${LAN_NETMASK}${CL}"
   echo -e "${DGN}Using Interface MTU Size: ${BGN}Default${CL}"
@@ -274,7 +279,7 @@ function advanced_settings() {
   fi
 
   if BRG=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a WAN Bridge" 8 58 vmbr0 --title "WAN BRIDGE" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
-    if [ -z $BRG ]; then
+    if [ -z $BRG]; then
       BRG="vmbr0"
     fi
     echo -e "${DGN}Using WAN Bridge: ${BGN}$BRG${CL}"
@@ -282,9 +287,9 @@ function advanced_settings() {
     exit-script
   fi
 
-  if LAN_BRG=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a LAN Bridge" 8 58 vmbr0 --title "LAN BRIDGE" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
-    if [ -z $LAN_BRG ]; then
-      LAN_BRG="vmbr0"
+  if LAN_BRG=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a LAN Bridge" 8 58 vmbr1 --title "LAN BRIDGE" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
+    if [ -z $LAN_BRG]; then
+      LAN_BRG="vmbr1"
     fi
     echo -e "${DGN}Using LAN Bridge: ${BGN}$LAN_BRG${CL}"
   else
@@ -292,7 +297,7 @@ function advanced_settings() {
   fi
 
   if LAN_IP_ADDR=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a router IP" 8 58 $LAN_IP_ADDR --title "LAN IP ADDRESS" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
-    if [ -z $LAN_IP_ADDR ]; then
+    if [ -z $LAN_IP_ADDR]; then
       LAN_IP_ADDR="192.168.1.1"
     fi
     echo -e "${DGN}Using LAN IP ADDRESS: ${BGN}$LAN_IP_ADDR${CL}"
@@ -301,7 +306,7 @@ function advanced_settings() {
   fi
 
   if LAN_NETMASK=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a router netmmask" 8 58 $LAN_NETMASK --title "LAN NETMASK" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
-    if [ -z $LAN_NETMASK ]; then
+    if [ -z $LAN_NETMASK]; then
       LAN_NETMASK="255.255.255.0"
     fi
     echo -e "${DGN}Using LAN NETMASK: ${BGN}$LAN_NETMASK${CL}"
@@ -310,7 +315,7 @@ function advanced_settings() {
   fi
 
   if MAC1=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a WAN MAC Address" 8 58 $GEN_MAC --title "WAN MAC ADDRESS" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
-    if [ -z $MAC1 ]; then
+    if [ -z $MAC1]; then
       MAC="$GEN_MAC"
     else
       MAC="$MAC1"
@@ -321,7 +326,7 @@ function advanced_settings() {
   fi
 
   if MAC2=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a LAN MAC Address" 8 58 $GEN_MAC_LAN --title "LAN MAC ADDRESS" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
-    if [ -z $MAC2 ]; then
+    if [ -z $MAC2]; then
       LAN_MAC="$GEN_MAC_LAN"
     else
       LAN_MAC="$MAC2"
@@ -332,7 +337,7 @@ function advanced_settings() {
   fi
 
   if VLAN1=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a WAN Vlan (leave blank for default)" 8 58 --title "WAN VLAN" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
-    if [ -z $VLAN1 ]; then
+    if [ -z $VLAN1]; then
       VLAN1="Default"
       VLAN=""
     else
@@ -344,7 +349,7 @@ function advanced_settings() {
   fi
 
   if VLAN2=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a LAN Vlan" 8 58 999 --title "LAN VLAN" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
-    if [ -z $VLAN2 ]; then
+    if [ -z $VLAN2]; then
       VLAN2="999"
       LAN_VLAN=",tag=$VLAN2"
     else
@@ -356,7 +361,7 @@ function advanced_settings() {
   fi
 
   if MTU1=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set Interface MTU Size (leave blank for default)" 8 58 --title "MTU SIZE" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
-    if [ -z $MTU1 ]; then
+    if [ -z $MTU1]; then
       MTU1="Default"
       MTU=""
     else
@@ -413,14 +418,14 @@ while read -r line; do
   STORAGE_MENU+=("$TAG" "$ITEM" "OFF")
 done < <(pvesm status -content images | awk 'NR>1')
 VALID=$(pvesm status -content images | awk 'NR>1')
-if [ -z "$VALID" ]; then
+if [ -z "$VALID"]; then
   echo -e "\n${RD}⚠ Unable to detect a valid storage location.${CL}"
   echo -e "Exiting..."
   exit
-elif [ $((${#STORAGE_MENU[@]} / 3)) -eq 1 ]; then
+elif [ $((${#STORAGE_MENU[@]} / 3)) -eq 1]; then
   STORAGE=${STORAGE_MENU[0]}
 else
-  while [ -z "${STORAGE:+x}" ]; do
+  while [ -z "${STORAGE:+x}"]; do
     STORAGE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "Storage Pools" --radiolist \
       "Which storage pool you would like to use for the OpenWrt VM?\n\n" \
       16 $(($MSG_MAX_LENGTH + 23)) 6 \
@@ -498,6 +503,32 @@ send_line_to_vm "uci set network.lan.device=eth0"
 send_line_to_vm "uci set network.lan.proto=static"
 send_line_to_vm "uci set network.lan.ipaddr=${LAN_IP_ADDR}"
 send_line_to_vm "uci set network.lan.netmask=${LAN_NETMASK}"
+send_line_to_vm "uci set network.vlan100=interface"
+send_line_to_vm "uci set network.vlan100.device=eth0.100"
+send_line_to_vm "uci set network.vlan100.proto=static"
+send_line_to_vm "uci set network.vlan100.ipaddr=192.168.0.1"
+send_line_to_vm "uci set network.vlan100.netmask=255.255.255.0"
+send_line_to_vm "uci set network.vlan20=interface"
+send_line_to_vm "uci set network.vlan20.device=eth0.20"
+send_line_to_vm "uci set network.vlan20.proto=static"
+send_line_to_vm "uci set network.vlan20.ipaddr=192.168.20.1"
+send_line_to_vm "uci set network.vlan20.netmask=255.255.255.0"
+send_line_to_vm "uci set network.vlan50=interface"
+send_line_to_vm "uci set network.vlan50.device=eth0.50"
+send_line_to_vm "uci set network.vlan50.proto=static"
+send_line_to_vm "uci set network.vlan50.ipaddr=192.168.50.1"
+send_line_to_vm "uci set network.vlan50.netmask=255.255.255.0"
+send_line_to_vm "uci set network.vlan1=interface"
+send_line_to_vm "uci set network.vlan1.device=eth0.1"
+send_line_to_vm "uci set network.vlan1.proto=static"
+send_line_to_vm "uci set network.vlan1.ipaddr=192.168.1.1"
+send_line_to_vm "uci set network.vlan1.netmask=255.255.255.0"
+send_line_to_vm "uci set network.vlan30=interface"
+send_line_to_vm "uci set network.vlan30.device=eth0.30"
+send_line_to_vm "uci set network.vlan30.proto=static"
+send_line_to_vm "uci set network.vlan30.ipaddr=192.168.30.1"
+send_line_to_vm "uci set network.vlan30.netmask=255.255.255.0"
+send_line_to_vm "uci set dhcp.@dnsmasq[0].server='9.9.9.9'"
 send_line_to_vm "uci set firewall.@zone[1].input='ACCEPT'"
 send_line_to_vm "uci set firewall.@zone[1].forward='ACCEPT'"
 send_line_to_vm "uci commit"
@@ -508,16 +539,16 @@ until qm status $VMID | grep -q "stopped"; do
 done
 msg_info "Bridge interfaces are being added."
 qm set $VMID \
-  -net0 virtio,bridge=${LAN_BRG},macaddr=${LAN_MAC}${LAN_VLAN}${MTU} \
-  -net1 virtio,bridge=${BRG},macaddr=${MAC}${VLAN}${MTU} >/dev/null 2>/dev/null
+  -net0 virtio,bridge=${LAN_BRG},macaddr=${LAN_MAC},tag=100 \
+  -net1 virtio,bridge=${LAN_BRG},macaddr=${LAN_MAC},tag=20 \
+  -net2 virtio,bridge=${LAN_BRG},macaddr=${LAN_MAC},tag=50 \
+  -net3 virtio,bridge=${LAN_BRG},macaddr=${LAN_MAC},tag=1 \
+  -net4 virtio,bridge=${LAN_BRG},macaddr=${LAN_MAC},tag=30 \
+  -net5 virtio,bridge=${BRG},macaddr=${MAC} >/dev/null 2>/dev/null
 msg_ok "Bridge interfaces have been successfully added."
-if [ "$START_VM" == "yes" ]; then
+if [ "$START_VM" == "yes"]; then
   msg_info "Starting OpenWrt VM"
   qm start $VMID
   msg_ok "Started OpenWrt VM"
 fi
-VLAN_FINISH=""
-if [ "$VLAN" == "" ] && [ "$VLAN2" != "999" ]; then
-  VLAN_FINISH=" Please remember to adjust the VLAN tags to suit your network."
-fi
-msg_ok "Completed Successfully!\n${VLAN_FINISH}"
+msg_ok "Completed Successfully!"
