@@ -548,7 +548,7 @@ qm set $VMID \
   -net4 virtio,bridge=${LAN_BRG},macaddr=${LAN_MAC},tag=30 \
   -net5 virtio,bridge=${BRG},macaddr=${MAC} >/dev/null 2>/dev/null
 msg_ok "Bridge interfaces have been successfully added."
-if [ "$START_VM" == "yes"]; then
+if [ "$START_VM" == "yes" ]; then
   msg_info "Starting OpenWrt VM"
   qm start $VMID
   msg_ok "Started OpenWrt VM"
