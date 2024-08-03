@@ -422,10 +422,10 @@ if [ -z "$VALID"]; then
   echo -e "\n${RD}⚠ Unable to detect a valid storage location.${CL}"
   echo -e "Exiting..."
   exit
-elif [ $((${#STORAGE_MENU[@]} / 3)) -eq 1]; then
+elif [ $((${#STORAGE_MENU[@]} / 3)) -eq 1 ]; then
   STORAGE=${STORAGE_MENU[0]}
 else
-  while [ -z "${STORAGE:+x}"]; do
+  while [ -z "${STORAGE:+x}" ]; do
     STORAGE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "Storage Pools" --radiolist \
       "Which storage pool you would like to use for the OpenWrt VM?\n\n" \
       16 $(($MSG_MAX_LENGTH + 23)) 6 \
