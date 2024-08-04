@@ -203,8 +203,8 @@ function exit-script() {
 function default_settings() {
   VMID=$NEXTID
   HN=openwrt
-  CORE_COUNT="1"
-  RAM_SIZE="256"
+  CORE_COUNT="4"
+  RAM_SIZE="12000"
   BRG="vmbr0"
   VLAN=""
   MAC=$GEN_MAC
